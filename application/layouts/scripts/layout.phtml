@@ -1,0 +1,30 @@
+<?php echo $this->doctype();?>
+<html lang="es">
+<head>
+<?php echo $this->headMeta();?>
+<?php $this->headTitle()->prepend($this->pageTitle); ?>
+<?php echo $this->headTitle();?>
+<?php echo $this->headLink();?>
+<?php echo $this->headScript();?>
+<!--[if lt IE 9]>
+<script src="/public/js/html5shiv.js"></script>
+<![endif]-->
+<!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
+</head>
+<body>
+    <header>
+        <h1>RentoRento</h1>
+        <nav>
+            <ul>
+                <li><a href="#">prueba</a></li>
+                <li><a href="#">prueba</a></li>
+                <li><a href="#">prueba</a></li>
+            </ul>
+        </nav>
+    </header>
+    <?php echo $this->layout()->content ?>
+    <footer>
+        Estoe s una prueba del footer;
+    </footer>
+</body>
+</html>

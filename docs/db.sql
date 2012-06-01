@@ -3,14 +3,14 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
 
 CREATE SCHEMA IF NOT EXISTS `rentorento` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish_ci ;
-USE `rentorento`;
+USE `rentorento` ;
 
 -- -----------------------------------------------------
--- Table `rentorento`.`user_type`
+-- Table `rentorento`.`role`
 -- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `rentorento`.`user_type` (
+CREATE  TABLE IF NOT EXISTS `rentorento`.`role` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `description` VARCHAR(45) NOT NULL ,
+  `name` VARCHAR(45) NOT NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
 
@@ -23,9 +23,27 @@ CREATE  TABLE IF NOT EXISTS `rentorento`.`user` (
   `username` VARCHAR(45) NOT NULL ,
   `password` VARCHAR(45) NOT NULL ,
   `email` VARCHAR(128) NOT NULL ,
-  `name` VARCHAR(45) NULL ,
-  `lastname` VARCHAR(45) NULL ,
-  `url` VARCHAR(255) NULL ,
+  `status` BIT NOT NULL DEFAULT 0 ,
+  `role_id` INT NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC) ,
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) ,
+  INDEX `fk_user_role1` (`role_id` ASC) ,
+  CONSTRAINT `fk_user_role1`
+    FOREIGN KEY (`role_id` )
+    REFERENCES `rentorento`.`role` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `rentorento`.`user_profile`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `rentorento`.`user_profile` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `name` VARCHAR(45) NOT NULL ,
+  `lastname` VARCHAR(45) NOT NULL ,
   `phone` VARCHAR(20) NULL ,
   `cellphone` VARCHAR(20) NULL ,
   `address` MEDIUMTEXT NULL ,
@@ -33,114 +51,96 @@ CREATE  TABLE IF NOT EXISTS `rentorento`.`user` (
   `city` VARCHAR(45) NOT NULL ,
   `state` VARCHAR(45) NOT NULL ,
   `country` VARCHAR(45) NOT NULL ,
+  `url` VARCHAR(255) NULL ,
   `pic` VARCHAR(125) NULL ,
-  `status` ENUM('A','B') NOT NULL DEFAULT 'A' ,
-  `user_type_id` INT NULL ,
+  `created_date` TIMESTAMP NOT NULL ,
+  `last_login` TIMESTAMP NULL ,
+  `user_id` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
-  CONSTRAINT `fk_user_user_type`
-    FOREIGN KEY (`user_type_id` )
-    REFERENCES `rentorento`.`user_type` (`id` )
+  INDEX `fk_user_profile_user1` (`user_id` ASC) ,
+  CONSTRAINT `fk_user_profile_user1`
+    FOREIGN KEY (`user_id` )
+    REFERENCES `rentorento`.`user` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
 COLLATE = utf8_spanish_ci;
 
-CREATE INDEX `fk_user_user_type` ON `rentorento`.`user` (`user_type_id` ASC) ;
-
 
 -- -----------------------------------------------------
--- Table `rentorento`.`type`
+-- Table `rentorento`.`estate_type`
 -- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `rentorento`.`type` (
+CREATE  TABLE IF NOT EXISTS `rentorento`.`estate_type` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `description` VARCHAR(45) NOT NULL ,
+  `type` VARCHAR(45) NOT NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `rentorento`.`rent`
+-- Table `rentorento`.`estate`
 -- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `rentorento`.`rent` (
+CREATE  TABLE IF NOT EXISTS `rentorento`.`estate` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `col` VARCHAR(45) NOT NULL ,
-  `zip` VARCHAR(5) NOT NULL ,
-  `address` TEXT NOT NULL ,
   `city` VARCHAR(45) NOT NULL ,
   `state` VARCHAR(45) NOT NULL ,
   `country` VARCHAR(45) NOT NULL ,
+  `address` TEXT NOT NULL ,
+  `zip` VARCHAR(5) NOT NULL ,
+  `zone` VARCHAR(45) NOT NULL ,
   `lat` FLOAT NULL ,
   `long` FLOAT NULL ,
-  `observations` TEXT NULL ,
-  `created` DATETIME NOT NULL ,
-  `status` ENUM('A','B') NULL DEFAULT 'A' ,
-  `rooms` INT NULL ,
-  `restrooms` INT NULL ,
-  `levels` INT NULL ,
+  `description` TEXT NULL ,
   `price` DOUBLE NOT NULL ,
-  `type_id` INT NULL ,
-  `user_id` INT NULL ,
-  `tags` TEXT NULL,
+  `create_date` TIMESTAMP NOT NULL ,
+  `status` BIT NOT NULL DEFAULT 1 ,
+  `views` INT NOT NULL DEFAULT 0 ,
+  `user_id` INT NOT NULL ,
+  `estate_type_id` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
-  CONSTRAINT `fk_rent_type`
-    FOREIGN KEY (`type_id` )
-    REFERENCES `rentorento`.`type` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_rent_user`
+  INDEX `fk_estate_user1` (`user_id` ASC) ,
+  INDEX `fk_estate_estate_type1` (`estate_type_id` ASC) ,
+  CONSTRAINT `fk_estate_user1`
     FOREIGN KEY (`user_id` )
     REFERENCES `rentorento`.`user` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_estate_estate_type1`
+    FOREIGN KEY (`estate_type_id` )
+    REFERENCES `rentorento`.`estate_type` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE INDEX `fk_rent_type` ON `rentorento`.`rent` (`type_id` ASC) ;
-
-CREATE INDEX `fk_rent_user` ON `rentorento`.`rent` (`user_id` ASC) ;
-
 
 -- -----------------------------------------------------
--- Table `rentorento`.`pic`
+-- Table `rentorento`.`estate_picture`
 -- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `rentorento`.`pic` (
+CREATE  TABLE IF NOT EXISTS `rentorento`.`estate_picture` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `source` VARCHAR(128) NOT NULL ,
-  `rent_id` INT NOT NULL ,
-  PRIMARY KEY (`id`, `rent_id`) ,
-  CONSTRAINT `fk_pic_rent`
-    FOREIGN KEY (`rent_id` )
-    REFERENCES `rentorento`.`rent` (`id` )
+  `estate_id` INT NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  INDEX `fk_estate_picture_estate1` (`estate_id` ASC) ,
+  CONSTRAINT `fk_estate_picture_estate1`
+    FOREIGN KEY (`estate_id` )
+    REFERENCES `rentorento`.`estate` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE INDEX `fk_pic_rent` ON `rentorento`.`pic` (`rent_id` ASC) ;
-
 
 -- -----------------------------------------------------
--- Table `rentorento`.`history`
+-- Table `rentorento`.`log`
 -- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `rentorento`.`history` (
+CREATE  TABLE IF NOT EXISTS `rentorento`.`log` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `user_id` INT NOT NULL ,
-  `rent_id` INT NOT NULL ,
-  PRIMARY KEY (`id`, `user_id`, `rent_id`) ,
-  CONSTRAINT `fk_history_user`
-    FOREIGN KEY (`user_id` )
-    REFERENCES `rentorento`.`user` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_history_rent`
-    FOREIGN KEY (`rent_id` )
-    REFERENCES `rentorento`.`rent` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  `date` TIMESTAMP NOT NULL ,
+  `type` INT NULL ,
+  `description` VARCHAR(45) NULL ,
+  PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
-
-CREATE INDEX `fk_history_user` ON `rentorento`.`history` (`user_id` ASC) ;
-
-CREATE INDEX `fk_history_rent` ON `rentorento`.`history` (`rent_id` ASC) ;
 
 
 -- -----------------------------------------------------
@@ -148,19 +148,37 @@ CREATE INDEX `fk_history_rent` ON `rentorento`.`history` (`rent_id` ASC) ;
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `rentorento`.`comments` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `comment` TEXT NULL ,
-  `email` VARCHAR(128) NOT NULL ,
-  `user`  VARCHAR(45) NOT NULL ,
-  `rent_id` INT NULL ,
+  `name` VARCHAR(45) NOT NULL ,
+  `email` VARCHAR(128) NULL ,
+  `comment` TEXT NOT NULL ,
+  `post_date` TIMESTAMP NOT NULL ,
+  `estate_id` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
-  CONSTRAINT `fk_comments_rent`
-    FOREIGN KEY (`rent_id` )
-    REFERENCES `rentorento`.`rent` (`id` )
+  INDEX `fk_comments_estate1` (`estate_id` ASC) ,
+  CONSTRAINT `fk_comments_estate1`
+    FOREIGN KEY (`estate_id` )
+    REFERENCES `rentorento`.`estate` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE INDEX `fk_comments_rent` ON `rentorento`.`comments` (`rent_id` ASC) ;
+
+-- -----------------------------------------------------
+-- Table `rentorento`.`estate_stats`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `rentorento`.`estate_stats` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `view` TIMESTAMP NULL ,
+  `location` VARCHAR(45) NULL COMMENT 'Ubicación Lat;Long de la persona que ve el inmuble con el fin de mostrar en un mapa todas las ubicaciones de donde ha sido visitado.' ,
+  `estate_id` INT NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  INDEX `fk_estate_stats_estate1` (`estate_id` ASC) ,
+  CONSTRAINT `fk_estate_stats_estate1`
+    FOREIGN KEY (`estate_id` )
+    REFERENCES `rentorento`.`estate` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
 
 
 
